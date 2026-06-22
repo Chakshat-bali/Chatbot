@@ -41,11 +41,10 @@ export function WelcomeDashboard({
       action: (
         <button
           onClick={onAutoRouteToggle}
-          className={`mt-3 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border ${
-            autoRoute
+          className={`mt-3 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border ${autoRoute
               ? "bg-indigo-50 border-indigo-200 text-indigo-700"
               : "bg-slate-50 border-slate-200 text-slate-500"
-          }`}
+            }`}
         >
           <Zap size={12} className={autoRoute ? "animate-pulse" : ""} />
           <span>Auto-Routing: {autoRoute ? "ACTIVE" : "INACTIVE"}</span>
@@ -66,11 +65,10 @@ export function WelcomeDashboard({
       action: (
         <button
           onClick={onSearchToggle}
-          className={`mt-3 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border ${
-            enableSearch
+          className={`mt-3 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border ${enableSearch
               ? "bg-emerald-50 border-emerald-200 text-emerald-700"
               : "bg-slate-50 border-slate-200 text-slate-500"
-          }`}
+            }`}
         >
           <Globe size={12} />
           <span>Google Search: {enableSearch ? "ACTIVE" : "INACTIVE"}</span>
@@ -87,11 +85,10 @@ export function WelcomeDashboard({
       <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 md:p-8 shadow-2xl border border-slate-800">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-12 -mt-12"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-slate-500/5 rounded-full blur-2xl -ml-8 -mb-8"></div>
-        
+
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2.5 max-w-xl">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              ⚡ Multi-Agent Platform
             </span>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight bg-linear-to-r from-white via-indigo-100 to-indigo-200 bg-clip-text text-transparent">
               Welcome to Synapse AI
@@ -100,7 +97,7 @@ export function WelcomeDashboard({
               Interact with specialized agents, analyze rich PDF documents or images, and leverage real-time web search grounding to accelerate your productivity.
             </p>
           </div>
-          
+
           <div className="flex flex-wrap gap-3 shrink-0">
             <button
               onClick={() => setTourStep(0)}
@@ -164,9 +161,8 @@ export function WelcomeDashboard({
               {tourSteps.map((_, idx) => (
                 <div
                   key={idx}
-                  className={`flex-1 h-full transition-all duration-300 border-r border-white last:border-r-0 ${
-                    idx <= tourStep ? "bg-indigo-600" : "bg-slate-200/80"
-                  }`}
+                  className={`flex-1 h-full transition-all duration-300 border-r border-white last:border-r-0 ${idx <= tourStep ? "bg-indigo-600" : "bg-slate-200/80"
+                    }`}
                 ></div>
               ))}
             </div>
@@ -177,11 +173,10 @@ export function WelcomeDashboard({
             <button
               onClick={() => setTourStep(tourStep > 0 ? tourStep - 1 : null)}
               disabled={tourStep === 0}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-                tourStep === 0
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${tourStep === 0
                   ? "text-slate-300 cursor-not-allowed"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer"
-              }`}
+                }`}
             >
               <ChevronLeft size={14} />
               <span>Back</span>
@@ -243,15 +238,13 @@ export function WelcomeDashboard({
               {/* Inline Toggle switch */}
               <button
                 onClick={onAutoRouteToggle}
-                className={`w-10 h-5 rounded-full p-0.5 transition-colors relative cursor-pointer ${
-                  autoRoute ? "bg-indigo-600" : "bg-slate-300"
-                }`}
+                className={`w-10 h-5 rounded-full p-0.5 transition-colors relative cursor-pointer ${autoRoute ? "bg-indigo-600" : "bg-slate-300"
+                  }`}
                 title="Toggle Auto Routing"
               >
                 <div
-                  className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ${
-                    autoRoute ? "translate-x-5" : "translate-x-0"
-                  }`}
+                  className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ${autoRoute ? "translate-x-5" : "translate-x-0"
+                    }`}
                 ></div>
               </button>
             </div>
@@ -291,15 +284,13 @@ export function WelcomeDashboard({
               {/* Inline Toggle switch */}
               <button
                 onClick={onSearchToggle}
-                className={`w-10 h-5 rounded-full p-0.5 transition-colors relative cursor-pointer ${
-                  enableSearch ? "bg-emerald-600" : "bg-slate-300"
-                }`}
+                className={`w-10 h-5 rounded-full p-0.5 transition-colors relative cursor-pointer ${enableSearch ? "bg-emerald-600" : "bg-slate-300"
+                  }`}
                 title="Toggle Web Search"
               >
                 <div
-                  className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ${
-                    enableSearch ? "translate-x-5" : "translate-x-0"
-                  }`}
+                  className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ${enableSearch ? "translate-x-5" : "translate-x-0"
+                    }`}
                 ></div>
               </button>
             </div>

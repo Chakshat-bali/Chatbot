@@ -322,7 +322,10 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
 
       if (!response.ok) {
         const errData = await response.json();
-        throw new Error(errData.error || errData.details || "Failed to generate bot reply.");
+        const errMsg = errData.details 
+          ? `${errData.error || "Error"}: ${errData.details}` 
+          : (errData.error || "Failed to generate bot reply.");
+        throw new Error(errMsg);
       }
 
       const resData = await response.json();

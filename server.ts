@@ -41,27 +41,10 @@ async function startServer() {
   // API Route for classifying user query into standard PersonaId (assistant, creative, developer, socratic)
   app.post("/api/classify", async (req, res) => {
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        return res.status(401).json({
-          error: "Gemini API key is not configured.",
-          details: "Please verify that GEMINI_API_KEY is configured under your Settings > Secrets panel."
-        });
-      }
-
       const { text } = req.body;
       if (!text || typeof text !== "string") {
         return res.json({ personaId: "assistant" });
       }
-
-      const ai = new GoogleGenAI({
-        apiKey,
-        httpOptions: {
-          headers: {
-            "User-Agent": "aistudio-build",
-          }
-        }
-      });
 
       const classificationPrompt = `
 You are a highly analytical query routing engine for a multi-agent chat workspace.
@@ -82,6 +65,7 @@ Output:`;
       let answer = "";
       if (process.env.GROQ_API_KEY) {
         try {
+          console.log("Classifying query with Groq...");
           const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -99,6 +83,7 @@ Output:`;
           if (groqRes.ok) {
             const data: any = await groqRes.json();
             answer = (data.choices?.[0]?.message?.content || "").trim().toLowerCase();
+            console.log("Groq classification result:", answer);
           } else {
             const errText = await groqRes.text();
             console.warn(`Groq classification error (status ${groqRes.status}): ${errText}`);
@@ -108,16 +93,30 @@ Output:`;
         }
       }
 
-      if (!answer) {
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: [{ role: "user", parts: [{ text: classificationPrompt }] }],
-          config: {
-            temperature: 0.1,
-            maxOutputTokens: 10,
-          }
-        });
-        answer = (response.text || "").trim().toLowerCase();
+      if (!answer && process.env.GEMINI_API_KEY) {
+        try {
+          console.log("Falling back to Gemini for classification...");
+          const ai = new GoogleGenAI({
+            apiKey: process.env.GEMINI_API_KEY,
+            httpOptions: {
+              headers: {
+                "User-Agent": "aistudio-build",
+              }
+            }
+          });
+          const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{ role: "user", parts: [{ text: classificationPrompt }] }],
+            config: {
+              temperature: 0.1,
+              maxOutputTokens: 10,
+            }
+          });
+          answer = (response.text || "").trim().toLowerCase();
+          console.log("Gemini classification result:", answer);
+        } catch (geminiErr) {
+          console.error("Gemini classification failed:", geminiErr);
+        }
       }
 
       let personaId = "assistant";
