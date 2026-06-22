@@ -148,6 +148,16 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
       return;
     }
 
+    if (isPDF && file.size > 5 * 1024 * 1024) {
+      alert("PDF file size must be less than 5 MB.");
+      return;
+    }
+
+    if (isImage && file.size > 5 * 1024 * 1024) {
+      alert("Image file size must be less than 5 MB to prevent context overflow.");
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       const base64String = (reader.result as string).split(",")[1];
@@ -172,6 +182,16 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
       const isPDF = file.type === "application/pdf";
 
       if (isImage || isPDF) {
+        if (isPDF && file.size > 5 * 1024 * 1024) {
+          alert("PDF file size must be less than 5 MB.");
+          return;
+        }
+
+        if (isImage && file.size > 5 * 1024 * 1024) {
+          alert("Image file size must be less than 5 MB to prevent context overflow.");
+          return;
+        }
+
         const reader = new FileReader();
         reader.onload = () => {
           const base64String = (reader.result as string).split(",")[1];
