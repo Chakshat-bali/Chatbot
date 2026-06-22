@@ -45,7 +45,7 @@ export default function App() {
 
   const [loading, setLoading] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [enableSearch, setEnableSearch] = useState<boolean>(true);
+  const [enableSearch, setEnableSearch] = useState<boolean>(false);
   const [autoRoute, setAutoRoute] = useState<boolean>(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -474,7 +474,7 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
           <div className="p-5 border-b border-slate-100 bg-slate-55/60">
             <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Model Core Personality</h2>
             <div className="grid grid-cols-2 gap-2">
-              {(Object.keys(PERSONAS) as PersonaId[]).map((pKey) => {
+              {(Object.keys(PERSONAS) as PersonaId[]).map((pKey, idx) => {
                 const persona = PERSONAS[pKey];
                 const isSelected = activeThread?.personaId === pKey;
                 return (
@@ -518,7 +518,12 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
                         </button>
                         
                         {/* Custom Rich Tooltip */}
-                        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-52 p-3 bg-slate-900/95 backdrop-blur-sm border border-slate-800 text-white text-[11px] rounded-xl shadow-xl pointer-events-none opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50 translate-y-1 group-hover/tooltip:translate-y-0">
+                        <div className={`absolute left-1/2 -translate-x-1/2 w-52 p-3 bg-slate-900/95 backdrop-blur-sm border border-slate-800 text-white text-[11px] rounded-xl shadow-xl pointer-events-none opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 z-50
+                          ${idx < 2 
+                            ? "top-full mt-2 -translate-y-1 group-hover/tooltip:translate-y-0" 
+                            : "bottom-full mb-2 translate-y-1 group-hover/tooltip:translate-y-0"
+                          }
+                        `}>
                           <p className="font-bold text-indigo-300 mb-1 flex items-center gap-1.5 font-sans">
                             <span>{persona.emoji}</span>
                             <span>{persona.name}</span>
@@ -527,7 +532,11 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
                             {persona.description}
                           </p>
                           {/* Triangle indicator */}
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-slate-900 border-r border-b border-slate-800 rotate-45 -mt-1"></div>
+                          {idx < 2 ? (
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-slate-900 border-t border-l border-slate-800 rotate-45 -mt-1"></div>
+                          ) : (
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-slate-900 border-r border-b border-slate-800 rotate-45 -mt-1"></div>
+                          )}
                         </div>
                       </div>
                     </div>
