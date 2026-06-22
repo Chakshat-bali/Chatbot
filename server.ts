@@ -6,6 +6,31 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Helper to convert Gemini payload schema to OpenAI/Groq compatible chat messages schema
+function convertGeminiToOpenAI(contents: any[], systemInstruction?: string) {
+  const messages: any[] = [];
+  if (systemInstruction) {
+    messages.push({ role: "system", content: systemInstruction });
+  }
+  for (const message of contents) {
+    const role = message.role === "model" ? "assistant" : "user";
+    let content = "";
+    if (Array.isArray(message.parts)) {
+      content = message.parts
+        .map((part: any) => {
+          if (part.text) return part.text;
+          return "";
+        })
+        .join("\n")
+        .trim();
+    } else if (typeof message.parts === "string") {
+      content = message.parts;
+    }
+    messages.push({ role, content });
+  }
+  return messages;
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -54,16 +79,47 @@ Do NOT include any introduction, explanations, punctuation, markdown blocks, for
 User Input: "${text.replace(/"/g, '\\"')}"
 Output:`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{ role: "user", parts: [{ text: classificationPrompt }] }],
-        config: {
-          temperature: 0.1,
-          maxOutputTokens: 10,
-        }
-      });
+      let answer = "";
+      if (process.env.GROQ_API_KEY) {
+        try {
+          const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              model: "llama-3.1-8b-instant",
+              messages: [{ role: "user", content: classificationPrompt }],
+              temperature: 0.1,
+              max_tokens: 10
+            })
+          });
 
-      const answer = (response.text || "").trim().toLowerCase();
+          if (groqRes.ok) {
+            const data: any = await groqRes.json();
+            answer = (data.choices?.[0]?.message?.content || "").trim().toLowerCase();
+          } else {
+            const errText = await groqRes.text();
+            console.warn(`Groq classification error (status ${groqRes.status}): ${errText}`);
+          }
+        } catch (groqErr) {
+          console.error("Groq classification failed, falling back to Gemini:", groqErr);
+        }
+      }
+
+      if (!answer) {
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: [{ role: "user", parts: [{ text: classificationPrompt }] }],
+          config: {
+            temperature: 0.1,
+            maxOutputTokens: 10,
+          }
+        });
+        answer = (response.text || "").trim().toLowerCase();
+      }
+
       let personaId = "assistant";
       if (answer.includes("creative")) personaId = "creative";
       else if (answer.includes("developer")) personaId = "developer";
@@ -96,32 +152,83 @@ Output:`;
         });
       }
 
-      // Lazy load the Gemini client with appropriate headers for AI Studio environment
-      const ai = new GoogleGenAI({
-        apiKey,
-        httpOptions: {
-          headers: {
-            "User-Agent": "aistudio-build",
+      // Check if there are any multimodal attachments (like PDFs or images) in the conversation history
+      const hasAttachments = contents.some((msg: any) => 
+        Array.isArray(msg.parts) && msg.parts.some((part: any) => part.inlineData)
+      );
+
+      let responseText = "";
+      let routedToGroq = false;
+
+      // Route to Groq only if:
+      // 1. GROQ_API_KEY is configured in the environment
+      // 2. Google Search grounding is not requested (enableSearch is false)
+      // 3. No attachments are present (since Groq free-tier chat APIs don't natively parse PDFs/images)
+      if (process.env.GROQ_API_KEY && !enableSearch && !hasAttachments) {
+        try {
+          console.log("Routing query to Groq (Llama 3.3 70B)...");
+          const openaiMessages = convertGeminiToOpenAI(contents, systemInstruction);
+
+          const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              model: "llama-3.3-70b-specdec",
+              messages: openaiMessages,
+              temperature: 0.7
+            })
+          });
+
+          if (groqRes.ok) {
+            const data: any = await groqRes.json();
+            responseText = data.choices?.[0]?.message?.content || "";
+            routedToGroq = true;
+          } else {
+            const errText = await groqRes.text();
+            console.warn(`Groq API returned error status ${groqRes.status}: ${errText}. Falling back to Gemini.`);
           }
+        } catch (groqErr) {
+          console.error("Groq chat generation failed, falling back to Gemini:", groqErr);
         }
-      });
+      }
 
-      // Call Gemini 2.5 Flash - latest developer model supporting Google Search grounding natively
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents,
-        config: {
-          systemInstruction: systemInstruction || undefined,
-          tools: enableSearch ? [{ googleSearch: {} }] : undefined,
-        },
-      });
+      if (!routedToGroq) {
+        console.log("Routing query to Gemini 2.5 Flash...");
+        // Lazy load the Gemini client with appropriate headers for AI Studio environment
+        const ai = new GoogleGenAI({
+          apiKey,
+          httpOptions: {
+            headers: {
+              "User-Agent": "aistudio-build",
+            }
+          }
+        });
 
-      // Extract groundingMetadata if returned by the search tool
-      const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+        // Call Gemini 2.5 Flash - latest developer model supporting Google Search grounding natively
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents,
+          config: {
+            systemInstruction: systemInstruction || undefined,
+            tools: enableSearch ? [{ googleSearch: {} }] : undefined,
+          },
+        });
+
+        // Extract groundingMetadata if returned by the search tool
+        const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+
+        return res.json({ 
+          text: response.text,
+          groundingMetadata: groundingMetadata || null
+        });
+      }
 
       return res.json({ 
-        text: response.text,
-        groundingMetadata: groundingMetadata || null
+        text: responseText,
+        groundingMetadata: null
       });
     } catch (error: any) {
       console.error("Error in /api/chat:", error);
