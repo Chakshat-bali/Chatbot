@@ -53,7 +53,7 @@ export default function App() {
 
   // Load initial threads from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("lumina_threads");
+    const saved = localStorage.getItem("synapse_threads") || localStorage.getItem("lumina_threads");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -77,7 +77,7 @@ export default function App() {
         {
           id: "welcome-msg",
           role: "model",
-          text: `Hello! I'm **Aura**, your dedicated **LuminaBot** companion. I am here to help you summarize full documents, explain complex topics, answer general questions, or run real-time searches!
+          text: `Hello! I'm **Aura**, your dedicated **Synapse AI** companion. I am here to help you summarize full documents, explain complex topics, answer general questions, or run real-time searches!
 
 You can also attach **PDF documents** or **Images** using the Paperclip attach icon next to the input area (or by dragging and dropping them here) to ask advanced queries about them. How can I support you today?`,
           timestamp: new Date().toISOString()
@@ -91,7 +91,7 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
   // Save threads to localStorage on change
   useEffect(() => {
     if (threads.length > 0) {
-      localStorage.setItem("lumina_threads", JSON.stringify(threads));
+      localStorage.setItem("synapse_threads", JSON.stringify(threads));
     }
   }, [threads]);
 
@@ -418,24 +418,33 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
             <Menu size={20} />
           </button>
           
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-0.5 shadow-md shadow-indigo-100 flex items-center justify-center relative group">
-            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-[10px]"></div>
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m12 3-1.912 5.886L4 10l5.886 1.912L12 21l1.912-5.886L20 10l-5.886-1.912L12 3Z" fill="url(#logo-gradient)" />
-                <defs>
-                  <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#818CF8" />
-                    <stop offset="50%" stopColor="#C084FC" />
-                    <stop offset="100%" stopColor="#F472B6" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
+          <div className="text-indigo-600 flex items-center justify-center">
+            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              {/* Connections between neural nodes */}
+              <path d="M6 12h12" stroke="currentColor" strokeWidth="1.2" opacity="0.35" />
+              <path d="M12 6v12" stroke="currentColor" strokeWidth="1.2" opacity="0.35" />
+              <path d="M7.5 7.5l9 9" stroke="currentColor" strokeWidth="1.2" opacity="0.35" strokeLinecap="round" />
+              <path d="M7.5 16.5l9-9" stroke="currentColor" strokeWidth="1.2" opacity="0.35" strokeLinecap="round" />
+              
+              {/* Central active Synapse hub */}
+              <circle cx="12" cy="12" r="3.2" fill="currentColor" />
+              
+              {/* Surrounding peripheral network receptors */}
+              <circle cx="6" cy="12" r="1.8" fill="currentColor" />
+              <circle cx="18" cy="12" r="1.8" fill="currentColor" />
+              <circle cx="12" cy="6" r="1.8" fill="currentColor" />
+              <circle cx="12" cy="18" r="1.8" fill="currentColor" />
+              
+              {/* Outer signal pulses */}
+              <circle cx="8" cy="8" r="1.2" fill="currentColor" opacity="0.75" />
+              <circle cx="16" cy="16" r="1.2" fill="currentColor" opacity="0.75" />
+              <circle cx="8" cy="16" r="1.2" fill="currentColor" opacity="0.75" />
+              <circle cx="16" cy="8" r="1.2" fill="currentColor" opacity="0.75" />
+            </svg>
           </div>
           <div>
-            <span className="font-bold text-lg md:text-xl tracking-tight uppercase">
-              Lumina<span className="text-indigo-600">Bot</span>
+            <span className="font-extrabold text-lg md:text-xl tracking-widest font-sans uppercase text-slate-800">
+              SYNAPSE
             </span>
           </div>
         </div>

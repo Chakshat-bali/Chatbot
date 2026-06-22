@@ -1,6 +1,6 @@
 {
-  "name": "LuminaBot",
-  "description": "An interactive chatbot powered by Gemini, designed for clean and natural conversations.",
+  "name": "Synapse AI",
+  "description": "An adaptive, multi-agent AI workspace with smart cognitive query routing.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
