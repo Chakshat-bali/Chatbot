@@ -24,6 +24,7 @@ import {
 import { PERSONAS } from "./personas";
 import { ChatMessage, PersonaId } from "./types";
 import { MessageContentRenderer } from "./components/MessageContentRenderer";
+import { WelcomeDashboard } from "./components/WelcomeDashboard";
 
 interface Thread {
   id: string;
@@ -47,6 +48,7 @@ export default function App() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [enableSearch, setEnableSearch] = useState<boolean>(false);
   const [autoRoute, setAutoRoute] = useState<boolean>(true);
+  const [tourStep, setTourStep] = useState<number | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -491,7 +493,7 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
           </div>
 
           {/* Core Personas Hub */}
-          <div className="p-5 border-b border-slate-100 bg-slate-55/60">
+          <div className={`p-5 border-b border-slate-100 bg-slate-55/60 transition-all duration-300 ${tourStep === 0 ? "relative z-50 ring-4 ring-indigo-500 shadow-[0_0_25px_rgba(99,102,241,0.5)] rounded-xl bg-indigo-50/20 scale-[1.02] m-2 border-indigo-200" : ""}`}>
             <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Model Core Personality</h2>
             <div className="grid grid-cols-2 gap-2">
               {(Object.keys(PERSONAS) as PersonaId[]).map((pKey, idx) => {
@@ -653,153 +655,168 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
             onDrop={handleDrop}
             id="chat-messages-container"
           >
-            {activeThread?.messages.map((message) => {
-              const isUser = message.role === "user";
-              return (
-                <div key={message.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`} id={`message-${message.id}`}>
-                  <div className={`flex gap-3 max-w-2xl ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-                    
-                    {/* Circle Avatar badge */}
-                    <div className={`w-8 h-8 rounded-full border shrink-0 flex items-center justify-center font-bold text-xs select-none shadow-sm
-                      ${isUser 
-                        ? "bg-slate-900 border-slate-800 text-white" 
-                        : "bg-white border-slate-200 text-indigo-600"
-                      }
-                    `}>
-                      {isUser ? "U" : activePersona.emoji}
-                    </div>
+            {!activeThread?.messages.some((m) => m.role === "user") ? (
+              <WelcomeDashboard
+                activePersonaId={activeThread?.personaId || "assistant"}
+                onPersonaChange={handlePersonaChange}
+                autoRoute={autoRoute}
+                onAutoRouteToggle={() => setAutoRoute((prev) => !prev)}
+                enableSearch={enableSearch}
+                onSearchToggle={() => setEnableSearch((prev) => !prev)}
+                tourStep={tourStep}
+                setTourStep={setTourStep}
+              />
+            ) : (
+              <>
+                {activeThread?.messages.map((message) => {
+                  const isUser = message.role === "user";
+                  return (
+                    <div key={message.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`} id={`message-${message.id}`}>
+                      <div className={`flex gap-3 max-w-2xl ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+                        
+                        {/* Circle Avatar badge */}
+                        <div className={`w-8 h-8 rounded-full border shrink-0 flex items-center justify-center font-bold text-xs select-none shadow-sm
+                          ${isUser 
+                            ? "bg-slate-900 border-slate-800 text-white" 
+                            : "bg-white border-slate-200 text-indigo-600"
+                          }
+                        `}>
+                          {isUser ? "U" : activePersona.emoji}
+                        </div>
 
-                    {/* Chat Bubble card container */}
-                    <div className="flex flex-col space-y-1.5">
-                      <div className={`p-4 md:p-5 rounded-2xl shadow-sm leading-relaxed relative
-                        ${isUser 
-                          ? "bg-indigo-600 text-white rounded-tr-none" 
-                          : "bg-white border border-slate-200/90 text-slate-800 rounded-tl-none"
-                        }
-                      `}>
-                        {/* Display User image or PDF document upload inside message bubble */}
-                        {isUser && message.file && (
-                          <div className="mb-3">
-                            {message.file.mimeType === "application/pdf" ? (
-                              <div className="flex items-center gap-3 px-4 py-3 bg-indigo-700/60 border border-indigo-400/40 rounded-xl max-w-sm text-white shrink-0 shadow-sm" id={`pdf-badge-${message.id}`}>
-                                <div className="w-10 h-10 rounded-lg bg-rose-600 flex flex-col items-center justify-center font-bold text-[10px] shadow-md border border-rose-500 shrink-0">
-                                  <span className="text-white">PDF</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold truncate text-white">{message.file.name}</p>
-                                  <p className="text-[10px] text-indigo-200">Interactive PDF Document</p>
-                                </div>
+                        {/* Chat Bubble card container */}
+                        <div className="flex flex-col space-y-1.5">
+                          <div className={`p-4 md:p-5 rounded-2xl shadow-sm leading-relaxed relative
+                            ${isUser 
+                              ? "bg-indigo-600 text-white rounded-tr-none" 
+                              : "bg-white border border-slate-200/90 text-slate-800 rounded-tl-none"
+                            }
+                          `}>
+                            {/* Display User image or PDF document upload inside message bubble */}
+                            {isUser && message.file && (
+                              <div className="mb-3">
+                                {message.file.mimeType === "application/pdf" ? (
+                                  <div className="flex items-center gap-3 px-4 py-3 bg-indigo-700/60 border border-indigo-400/40 rounded-xl max-w-sm text-white shrink-0 shadow-sm" id={`pdf-badge-${message.id}`}>
+                                    <div className="w-10 h-10 rounded-lg bg-rose-600 flex flex-col items-center justify-center font-bold text-[10px] shadow-md border border-rose-500 shrink-0">
+                                      <span className="text-white">PDF</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-semibold truncate text-white">{message.file.name}</p>
+                                      <p className="text-[10px] text-indigo-200">Interactive PDF Document</p>
+                                    </div>
+                                  </div>
+                                ) : message.file.mimeType.startsWith("image/") ? (
+                                  <div className="max-w-[200px] rounded-lg overflow-hidden border border-indigo-500 bg-slate-950 shadow-sm">
+                                    <img
+                                      src={`data:${message.file.mimeType};base64,${message.file.data}`}
+                                      alt="Multimodal User Prompt payload"
+                                      className="w-full object-cover max-h-48"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-3 px-4 py-3 bg-indigo-700/60 border border-indigo-400/40 rounded-xl max-w-sm text-white shrink-0 shadow-sm">
+                                    <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center font-bold text-xs shrink-0">
+                                      DOC
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-semibold truncate text-white">{message.file.name}</p>
+                                      <p className="text-[10px] text-indigo-200">Attachment</p>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            ) : message.file.mimeType.startsWith("image/") ? (
-                              <div className="max-w-[200px] rounded-lg overflow-hidden border border-indigo-500 bg-slate-950 shadow-sm">
+                            )}
+
+                            {/* Fallback to legacy structure if file field not set but image field is present */}
+                            {isUser && !message.file && message.image && (
+                              <div className="mb-3 max-w-[200px] rounded-lg overflow-hidden border border-indigo-500 bg-slate-950">
                                 <img
-                                  src={`data:${message.file.mimeType};base64,${message.file.data}`}
+                                  src={`data:${message.image.mimeType};base64,${message.image.data}`}
                                   alt="Multimodal User Prompt payload"
                                   className="w-full object-cover max-h-48"
                                 />
                               </div>
-                            ) : (
-                              <div className="flex items-center gap-3 px-4 py-3 bg-indigo-700/60 border border-indigo-400/40 rounded-xl max-w-sm text-white shrink-0 shadow-sm">
-                                <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center font-bold text-xs shrink-0">
-                                  DOC
+                            )}
+
+                            {/* Text formatting content block (with specialized lists / bold parsing / copy blocks) */}
+                            <MessageContentRenderer text={message.text} isUser={isUser} />
+
+                            {/* Render Google Search citations and sources */}
+                            {!isUser && message.groundingMetadata?.groundingChunks && message.groundingMetadata.groundingChunks.length > 0 && (
+                              <div className="mt-4 pt-3 border-t border-slate-100 text-xs">
+                                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 flex items-center gap-1">
+                                  <Globe size={11} className="text-indigo-500" />
+                                  <span>Verified Search Sources</span>
+                                </span>
+                                <div className="flex flex-wrap gap-2 mt-1.5">
+                                  {message.groundingMetadata.groundingChunks.map((chunk, idx) => {
+                                    if (!chunk.web) return null;
+                                    return (
+                                      <a
+                                        key={idx}
+                                        href={chunk.web.uri}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        referrerPolicy="no-referrer"
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-[10px] text-indigo-600 hover:text-indigo-700 font-medium rounded-md transition-all shadow-sm"
+                                        title={chunk.web.title}
+                                      >
+                                        <span className="max-w-[120px] truncate">{chunk.web.title || "Web Link"}</span>
+                                        <span className="text-[8px] text-slate-400 font-mono">[{idx + 1}]</span>
+                                      </a>
+                                    );
+                                  })}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold truncate text-white">{message.file.name}</p>
-                                  <p className="text-[10px] text-indigo-200">Attachment</p>
+                                {message.groundingMetadata.webSearchQueries && message.groundingMetadata.webSearchQueries.length > 0 && (
+                                  <div className="mt-2 text-[10px] text-slate-400 italic">
+                                    Search query formulated: "{message.groundingMetadata.webSearchQueries[0]}"
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {message.error && (
+                              <div className="mt-3 bg-rose-50 border border-rose-100 text-rose-800 p-3 rounded-lg text-xs leading-relaxed space-y-1">
+                                <div className="flex items-center gap-1 text-rose-700 font-bold uppercase tracking-wider text-[10px]">
+                                  <AlertCircle size={12} />
+                                  <span>Initialization Anomaly</span>
+                                </div>
+                                <p>{message.error}</p>
+                                <div className="pt-2 border-t border-rose-200 mt-2 text-[10px] text-rose-600 font-mono">
+                                  Suggestion: Ensure your Gemini Secret API key is active. Go to top-right Settings &gt; Secrets to configure `GEMINI_API_KEY`.
                                 </div>
                               </div>
                             )}
                           </div>
-                        )}
 
-                        {/* Fallback to legacy structure if file field not set but image field is present */}
-                        {isUser && !message.file && message.image && (
-                          <div className="mb-3 max-w-[200px] rounded-lg overflow-hidden border border-indigo-500 bg-slate-950">
-                            <img
-                              src={`data:${message.image.mimeType};base64,${message.image.data}`}
-                              alt="Multimodal User Prompt payload"
-                              className="w-full object-cover max-h-48"
-                            />
-                          </div>
-                        )}
+                          {/* Msg Timestamp */}
+                          <span className={`text-[10px] text-slate-400 font-semibold select-none px-1 ${isUser ? "text-right" : "text-left"}`}>
+                            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
 
-                        {/* Text formatting content block (with specialized lists / bold parsing / copy blocks) */}
-                        <MessageContentRenderer text={message.text} isUser={isUser} />
-
-                        {/* Render Google Search citations and sources */}
-                        {!isUser && message.groundingMetadata?.groundingChunks && message.groundingMetadata.groundingChunks.length > 0 && (
-                          <div className="mt-4 pt-3 border-t border-slate-100 text-xs">
-                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2 flex items-center gap-1">
-                              <Globe size={11} className="text-indigo-500" />
-                              <span>Verified Search Sources</span>
-                            </span>
-                            <div className="flex flex-wrap gap-2 mt-1.5">
-                              {message.groundingMetadata.groundingChunks.map((chunk, idx) => {
-                                if (!chunk.web) return null;
-                                return (
-                                  <a
-                                    key={idx}
-                                    href={chunk.web.uri}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    referrerPolicy="no-referrer"
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-[10px] text-indigo-600 hover:text-indigo-700 font-medium rounded-md transition-all shadow-sm"
-                                    title={chunk.web.title}
-                                  >
-                                    <span className="max-w-[120px] truncate">{chunk.web.title || "Web Link"}</span>
-                                    <span className="text-[8px] text-slate-400 font-mono">[{idx + 1}]</span>
-                                  </a>
-                                );
-                              })}
-                            </div>
-                            {message.groundingMetadata.webSearchQueries && message.groundingMetadata.webSearchQueries.length > 0 && (
-                              <div className="mt-2 text-[10px] text-slate-400 italic">
-                                Search query formulated: "{message.groundingMetadata.webSearchQueries[0]}"
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {message.error && (
-                          <div className="mt-3 bg-rose-50 border border-rose-100 text-rose-800 p-3 rounded-lg text-xs leading-relaxed space-y-1">
-                            <div className="flex items-center gap-1 text-rose-700 font-bold uppercase tracking-wider text-[10px]">
-                              <AlertCircle size={12} />
-                              <span>Initialization Anomaly</span>
-                            </div>
-                            <p>{message.error}</p>
-                            <div className="pt-2 border-t border-rose-200 mt-2 text-[10px] text-rose-600 font-mono">
-                              Suggestion: Ensure your Gemini Secret API key is active. Go to top-right Settings &gt; Secrets to configure `GEMINI_API_KEY`.
-                            </div>
-                          </div>
-                        )}
                       </div>
-
-                      {/* Msg Timestamp */}
-                      <span className={`text-[10px] text-slate-400 font-semibold select-none px-1 ${isUser ? "text-right" : "text-left"}`}>
-                        {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
                     </div>
+                  );
+                })}
 
+                {/* Waiting/Typing simulated active process indicator */}
+                {loading && (
+                  <div className="flex justify-start animate-fade-in" id="loading-spinner-wrapper">
+                    <div className="flex gap-3 max-w-2xl">
+                      <div className="w-8 h-8 rounded-full bg-white border border-slate-200 text-indigo-600 font-bold text-xs shrink-0 flex items-center justify-center animate-spin">
+                        🌀
+                      </div>
+                      <div className="bg-white border border-slate-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2.5">
+                        <Loader2 size={16} className="text-indigo-600 animate-spin" />
+                        <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                          {activePersona.name} is computing response ...
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-
-            {/* Waiting/Typing simulated active process indicator */}
-            {loading && (
-              <div className="flex justify-start animate-fade-in" id="loading-spinner-wrapper">
-                <div className="flex gap-3 max-w-2xl">
-                  <div className="w-8 h-8 rounded-full bg-white border border-slate-200 text-indigo-600 font-bold text-xs shrink-0 flex items-center justify-center animate-spin">
-                    🌀
-                  </div>
-                  <div className="bg-white border border-slate-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2.5">
-                    <Loader2 size={16} className="text-indigo-600 animate-spin" />
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">
-                      {activePersona.name} is computing response ...
-                    </span>
-                  </div>
-                </div>
-              </div>
+                )}
+              </>
             )}
 
             <div ref={messagesEndRef} />
@@ -877,6 +894,7 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
                     ? "bg-indigo-50 text-indigo-600 border-indigo-200" 
                     : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-700"
                   }
+                  ${tourStep === 2 ? "relative z-50 ring-4 ring-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.6)] scale-110 duration-300 animate-pulse bg-indigo-55" : ""}
                 `}
                 title="Attach picture parameters or PDFs for analysis"
                 id="file-attachment-trigger"
@@ -892,6 +910,25 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
                 id="hidden-file-input"
               />
 
+              {/* Auto-routing toggle button */}
+              <button
+                onClick={() => setAutoRoute((prev) => !prev)}
+                className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center border transition-all shrink-0 cursor-pointer
+                  ${autoRoute 
+                    ? "bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 border-indigo-200" 
+                    : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-400"
+                  }
+                  ${tourStep === 1 ? "relative z-50 ring-4 ring-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.6)] scale-110 duration-300 animate-pulse bg-indigo-55" : ""}
+                `}
+                title={autoRoute ? "Auto-Routing is active (automatically switches agents)" : "Enable Auto-Routing"}
+                id="auto-routing-toggle"
+              >
+                <Zap size={16} className={autoRoute ? "text-indigo-600 animate-pulse" : "text-slate-400"} />
+                <span className="text-[9px] font-bold uppercase select-none leading-none mt-1 font-sans">
+                  {autoRoute ? "Auto" : "Manual"}
+                </span>
+              </button>
+
               {/* Google Search grounding toggle button */}
               <button
                 onClick={() => setEnableSearch((prev) => !prev)}
@@ -900,6 +937,7 @@ You can also attach **PDF documents** or **Images** using the Paperclip attach i
                     ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border-emerald-200" 
                     : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-400"
                   }
+                  ${tourStep === 3 ? "relative z-50 ring-4 ring-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)] scale-110 duration-300 animate-pulse bg-emerald-55" : ""}
                 `}
                 title={enableSearch ? "Google Search grounding is active" : "Enable Google Search"}
                 id="search-grounding-toggle"

@@ -33,7 +33,7 @@ function convertGeminiToOpenAI(contents: any[], systemInstruction?: string) {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8181;
 
   // Set body parser limits to allow base64 images for multimodal chat features
   app.use(express.json({ limit: "15mb" }));
